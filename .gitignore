@@ -1,0 +1,4 @@
+#忽略.idea文件  忽略 target文件夹  忽略.iml文件
+/**/*.iml
+/**/.idea
+/**/target

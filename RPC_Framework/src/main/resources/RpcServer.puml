@@ -1,0 +1,80 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+class RpcResponse<T> implements Serializable {
+    - String requestId //返回请求对象的序号
+    - Integer code //状态码
+    - String message //消息
+    - T data //返回数据
+    + //success:返回成功
+    + //fail:返回失败
+    + static <T> RpcResponse<T> success(T data, String requestId)
+    + static <T> RpcResponse<T> fail(RpcResponseCodeEnum rpcResponseCodeEnum)
+
+}
+RpcResponse --> RpcResponseCodeEnum
+RpcResponseCodeEnum --> RpcResponse
+class RpcResponseCodeEnum{
+    - Integer code //状态码
+    - String message //消息
+}
+RpcServiceProperties --o  SocketRpcServer:被监听到
+SocketRpcServer --o RpcResponse:返回结果
+class RpcServiceProperties {
+    //Rpc请求属性，用于寻找服务端的实体类
+    - String version;
+    - String group;
+    - String serviceName;//接口的全限定名
+    + String toRpcServiceName()//获取该请求的服务名称
+}
+
+interface HelloService {
+    + String hello(Hello hello)
+}
+
+class HelloServiceImpl implements HelloService
+
+HelloService --> SocketRpcServer
+
+class SocketRpcServer {
+    //线程池对象，用于执行方法调用过程
+    - final ExecutorService threadPool
+    - final ServiceProvider serviceProvider
+    + //registerService：根据实例对象和Rpc服务属性类想注册中心注册服务
+    + void registerService(Object service, RpcServiceProperties rpcServiceProperties)
+    + //start：不断监控某个端口号并执行对应操作
+    + void start()
+}
+
+SocketRpcServer o-- ServiceProvider
+interface ServiceProvider {
+    服务提供类，实际负责发布服务、根据请求信息获取具体实现对象等工作
+    + addService:将发布好的服务添加到本地，方便以后查找
+    + void addService(Object service, Class<?> serviceClass, RpcServiceProperties rpcServiceProperties)
+    + getService:根据请求信息获取具体实现对象
+    + public Object getService(RpcServiceProperties rpcServiceProperties)
+    + void publishService(Object service)
+    + publishService:发布服务
+    + void publishService(Object service, RpcServiceProperties rpcServiceProperties)
+}
+
+class ServiceProviderImpl implements ServiceProvider {
+    //保存已经发布了的方法及其名称
+    - final Map<String, Object> serviceMap;
+    //保存已经发布了的方法的名称
+    - final Set<String> registeredService;
+    //实际负责服务发布单元的对象
+    - final ServiceRegistry serviceRegistry;
+
+}
+
+ConcurrentHashMap --o ServiceProviderImpl
+ServiceRegistry --o ServiceProviderImpl
+interface ServiceRegistry {
+    //根据方法名称和本机地址信息发布服务
+    + void registerService(String rpcServiceName, InetSocketAddress inetSocketAddress)
+}
+
+class ZkServiceRegistry implements ServiceRegistry
+CuratorUtils --> ZkServiceRegistry
+@enduml

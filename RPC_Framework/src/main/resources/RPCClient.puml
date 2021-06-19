@@ -1,0 +1,111 @@
+@startuml
+'https://plantuml.com/class-diagram
+
+'abstract class AbstractList
+'abstract AbstractCollection
+'interface List
+'interface Collection
+'
+'List <|-- AbstractList
+'Collection <|-- AbstractCollection
+'
+'Collection <|- List
+'AbstractCollection <|- AbstractList
+'AbstractList <|-- ArrayList
+'
+'class ArrayList {
+'Object[] elementData
+'size()
+'}
+'
+'enum TimeUnit {
+'DAYS
+'HOURS
+'MINUTES
+'}
+
+class RpcRequest implements Serializable{
+    //Rpc请求实体类
+    - static final long serialVersionUID
+    - String requestId//输出和输入的序号应该相同
+    - String interfaceName//接口的全限定名
+    - String methodName//方法名称
+    - Object[] parameters//输入参数
+    - Class<?>[] paramTypes//参数类型
+    - String version//版本号,用于匹配程序版本
+    - String group//用于处理一个接口多个实现类的情况
+    + RpcServiceProperties toRpcProperties()//将改请求信息转换为Rpc属性方便分析
+}
+RpcRequest --> RpcServiceProperties
+RpcServiceProperties --> RpcRequest
+class RpcServiceProperties {
+    //Rpc名称属性，主要可以专门生成保存在zookeeper上的服务形式。用于寻找服务端的实体类
+    - String version;
+    - String group;
+    - String serviceName;//接口的全限定名
+    + String toRpcServiceName()//获取该请求的服务名称
+}
+
+
+RpcRequest --> RpcRequestTransport
+interface RpcRequestTransport{
+    //Rpc传输接口
+    + Object sendRpcRequest(RpcRequest)//发送实体类
+}
+
+class SocketRpcClient implements RpcRequestTransport {
+ 基于 Socket 传输 RpcRequest
+    //用于帮助寻找服务器IP
+    - final ServiceDiscovery serviceDiscovery
+}
+
+SocketRpcClient o-- serviceDiscovery
+interface serviceDiscovery{
+    服务发现类接口
+    + InetSocketAddress lookupService(String rpcServiceName)
+    + InetSocketAddress: 根据服务名称寻找服务器地址
+}
+
+class ZkServiceDiscovery implements serviceDiscovery {
+    基于zukeeper的服务发现类
+    //用于负载均衡策略的实现
+    - final LoadBalance loadBalance;
+}
+CuratorUtils --> ZkServiceDiscovery
+ZkServiceDiscovery o-- LoadBalance
+interface LoadBalance{
+    负载均衡类接口
+    + selectServiceAddress:根据服务器地址列表选择一个服务器地址
+    + String selectServiceAddress(List<String> serviceAddresses, String rpcServiceName)
+}
+
+class ConsistentHashLoadBalance implements LoadBalance{
+    一致性hash选择负载
+}
+
+class RandomLoadBalance implements LoadBalance{
+    随机负载选择
+}
+RpcClientProxy o-- RpcRequestTransport
+RpcClientProxy o-- RpcServiceProperties
+
+class RpcClientProxy{
+    动态代理工具类
+    - final RpcRequestTransport rpcRequestTransport;
+    -final RpcServiceProperties rpcServiceProperties;
+    + <T> T getProxy(Class<T> clazz)//获取代理类对象
+    + //invoke：代理类对象的处理逻辑
+    + Object invoke(Object proxy, Method method, Object[] args)
+}
+
+interface HelloService {
+  + String hello(Hello hello)
+}
+RpcClientProxy <-- HelloService
+
+RpcClientProxy --> HelloServiceImpl:creat
+
+HelloServiceImpl -->远程过程调用都已经封装好了_直接调用方法即可
+class HelloServiceImpl implements HelloService {
+}
+@enduml

@@ -55,11 +55,59 @@ interface RpcRequestTransport{
 
 class SocketRpcClient implements RpcRequestTransport {
  基于 Socket 传输 RpcRequest
+ - 注意：基于socket方式的发送返回的直接是RpcResponse返回对象，
+    这样是没有考虑到多线程并发情况的
     //用于帮助寻找服务器IP
     - final ServiceDiscovery serviceDiscovery
+    //用于帮助序列化对象
+    - final SerializeUtil serializeUtil
+}
+
+class NettyRpcClient implements RpcRequestTransport {
+ 基于 Netty 传输 RpcRequest
+ - 基于netty方式的发送考虑了并发使用同一个channel的问题，首先
+   通过一个ChannerProvider类专门提供到某个地址的channel，然后
+   通过异步future机制CompletableFuture获取返回类数据
+    //用于帮助寻找服务器IP
+    - final ServiceDiscovery serviceDiscovery
+    //用于帮助序列化对象
+    - final SerializeUtil serializeUtil
+    //专门用于获取通道，防止多个创建
+    - final ChannerProvider channerProvider
+    //根据RequestID完成CompletableFuture的异步数据注入
+    - final UnprocessedRequests unprocessedRequests
+}
+
+UnprocessedRequests --o NettyRpcClient
+class UnprocessedRequests {
+    //ConcurrentHashMap，根据requestId保存所有的待实现CompletableFuture对象
+    - static final Map<String, CompletableFuture<RpcResponse<Object>>>
+    //存入新的CompletableFuture
+    + void put(String requestId, CompletableFuture<RpcResponse<Object>> future)
+    //根据requestId完成CompletableFuture
+    + void complete(RpcResponse<Object> rpcResponse)
+}
+
+ChannelProvider --o NettyRpcClient
+class ChannelProvider {
+    //统一管理所有的通道
+    - final Map<String, Channel> channelMap
+    //根据InetSocketAddress获取channel，没有则创建
+    Channel get(InetSocketAddress inetSocketAddress)
+    //当channel使用完后，去除某个channel
+    void remove(InetSocketAddress inetSocketAddress)
+}
+
+SerializeUtil --o SocketRpcClient
+SerializeUtil --o NettyRpcClient
+interface SerializeUtil {
+    序列化并发送对象&&反序列化接收对象
+    + <T> void serializeAndSend(BufferedOutputStream bos, T obj,Class<T> clazz);
+    + <T> Object recieveAndSerialize(BufferedInputStream bis, Class<T> clazz);
 }
 
 SocketRpcClient o-- serviceDiscovery
+NettyRpcClient o-- serviceDiscovery
 interface serviceDiscovery{
     服务发现类接口
     + InetSocketAddress lookupService(String rpcServiceName)
@@ -71,6 +119,11 @@ class ZkServiceDiscovery implements serviceDiscovery {
     //用于负载均衡策略的实现
     - final LoadBalance loadBalance;
 }
+
+class CuratorUtils {
+    zookeeper工具类
+}
+
 CuratorUtils --> ZkServiceDiscovery
 ZkServiceDiscovery o-- LoadBalance
 interface LoadBalance{

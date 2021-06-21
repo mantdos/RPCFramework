@@ -2,11 +2,10 @@ package com.zxl.core.server.impl;
 
 import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.core.register.zk.util.CuratorUtils;
-import com.zxl.core.server.RpcServer;
+import com.zxl.core.server.RpcServerSocket;
 import com.zxl.core.server.ServiceProvider;
 
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -64,10 +63,10 @@ public class ServiceProviderImpl implements ServiceProvider {
             CuratorUtils.createPersistentNode(serverName);//先创建到接口全限定名的永久节点
             String host = InetAddress.getLocalHost().getHostAddress();
             //基于本身地址创建临时节点
-            CuratorUtils.createEphemeralNode(serverName+"/"+host+":"+ String.valueOf(RpcServer.getServerPort()));
+            CuratorUtils.createEphemeralNode(serverName+"/"+host+":"+ String.valueOf(RpcServerSocket.getServerPort()));
             //将发布了的服务添加到容器中
             addService(service,rpcServiceProperties);
-            log.printf("服务发布成功：%s\r\n",serverName+"/"+host+":"+ String.valueOf(RpcServer.getServerPort()));
+            log.printf("服务发布成功：%s\r\n",serverName+"/"+host+":"+ String.valueOf(RpcServerSocket.getServerPort()));
         } catch (Exception e) {
             log.printf("服务发布失败：%s\r\n",e.getMessage());
         }

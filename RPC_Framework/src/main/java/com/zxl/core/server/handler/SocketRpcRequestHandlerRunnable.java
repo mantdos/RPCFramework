@@ -47,7 +47,6 @@ public class SocketRpcRequestHandlerRunnable implements Runnable{
                 request = (RpcRequest) o;
             }
             request = (RpcRequest) o;
-            if(request==null) return;
             //2、根据请求类获取服务实例
             RpcServiceProperties rpcServiceProperties = request.toServerProperties();
             Object service = ServiceProviderImpl.newSingletonInstance().getService(rpcServiceProperties);

@@ -20,7 +20,7 @@ import java.util.concurrent.ExecutorService;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
-public class RpcServer {
+public class RpcServerSocket {
 
     private static int port = 2181;
 

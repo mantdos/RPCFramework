@@ -6,8 +6,6 @@ import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.core.register.ServiceDiscovery;
 import com.zxl.core.register.zk.ZookeeperDiscovery;
 import com.zxl.core.serialize.SerializeUtil;
-import com.zxl.core.serialize.impl.JacksonSerialization;
-import com.zxl.core.serialize.impl.JdkSerialization;
 import com.zxl.core.serialize.impl.ProtoStuffSerialization;
 import com.zxl.core.transport.RpcRequestTransport;
 
@@ -15,27 +13,13 @@ import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
-public class RpcClient implements RpcRequestTransport {
+public class SocketRpcClient implements RpcRequestTransport {
 
     //利用zookeeper来实现服务发现
     final ServiceDiscovery serviceDiscovery = new ZookeeperDiscovery();
 
     //组合一个序列化工具类
     final SerializeUtil serializeUtil = ProtoStuffSerialization.newSingletonInstance();
-
-    //Holder模式的单例创建方式
-    private static class SingletonHolder{
-        public static RpcClient serviceProvider = new RpcClient();
-        private SingletonHolder(){}
-    }
-
-    private RpcClient(){
-
-    }
-
-    public static RpcClient newSingletonInstance(){
-        return RpcClient.SingletonHolder.serviceProvider;
-    }
 
     //传输Rpc请求数据
     public RpcResponse sendRpcRequest(RpcRequest rpcRequest) {

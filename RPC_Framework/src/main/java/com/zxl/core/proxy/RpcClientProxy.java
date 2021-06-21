@@ -5,7 +5,8 @@ import com.zxl.commons.entity.RpcResponse;
 import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.commons.enums.RpcResponseCodeEnum;
 import com.zxl.core.transport.RpcRequestTransport;
-import com.zxl.core.transport.impl.RpcClient;
+import com.zxl.core.transport.impl.NettyRpcClient;
+import com.zxl.core.transport.impl.SocketRpcClient;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -16,7 +17,7 @@ import java.util.UUID;
 public class RpcClientProxy implements InvocationHandler {
     //用来告诉代理类当前使用的是什么分组和什么版本
     final RpcServiceProperties rpcServiceProperties;
-    final RpcRequestTransport rpcRequestTransport = RpcClient.newSingletonInstance();
+    final RpcRequestTransport rpcRequestTransport = new NettyRpcClient();
 
     public RpcClientProxy(RpcServiceProperties rpcServiceProperties) {
         this.rpcServiceProperties = rpcServiceProperties;

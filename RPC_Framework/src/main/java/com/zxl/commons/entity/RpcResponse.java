@@ -39,4 +39,8 @@ public class RpcResponse implements Serializable {
         response.setRequestID(requestID);
         return response;
     }
+
+    public String getRequestID() {
+        return requestID;
+    }
 }

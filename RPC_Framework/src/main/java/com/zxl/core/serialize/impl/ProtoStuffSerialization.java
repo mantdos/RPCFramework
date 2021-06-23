@@ -1,8 +1,7 @@
 package com.zxl.core.serialize.impl;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zxl.commons.util.KryoUtil;
-import com.zxl.core.serialize.SerializeUtil;
+import com.zxl.core.serialize.Serialization;
 import io.protostuff.LinkedBuffer;
 import io.protostuff.ProtobufIOUtil;
 import io.protostuff.runtime.RuntimeSchema;
@@ -14,7 +13,7 @@ import java.io.IOException;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
-public class ProtoStuffSerialization implements SerializeUtil {
+public class ProtoStuffSerialization implements Serialization {
 
 
     //Holder模式的单例创建方式
@@ -41,7 +40,7 @@ public class ProtoStuffSerialization implements SerializeUtil {
         try {
             //序列化数据
             byte[] data = ProtobufIOUtil.toByteArray(obj, RuntimeSchema.createFrom(clazz),
-                    LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE));;
+                    LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE));
             bos.write(data);
             bos.flush();
         } catch (Exception e) {
@@ -68,5 +67,27 @@ public class ProtoStuffSerialization implements SerializeUtil {
             log.printf("反序列化发送失败：%s",e.getMessage());
             return null;
         }
+    }
+    @Override
+    public <T> byte[] serialize(T obj, Class<T> clazz) {
+        try {
+            return ProtobufIOUtil.toByteArray(obj, RuntimeSchema.createFrom(clazz),
+                    LinkedBuffer.allocate(LinkedBuffer.DEFAULT_BUFFER_SIZE));
+        } catch (Exception e) {
+            log.printf("ProtoStuff序列化失败：%s",e.getMessage());
+        }
+        return null;
+    }
+    @Override
+    public <T> Object unSerialize(byte[] bytes, Class<T> clazz) {
+        try {
+            RuntimeSchema<T> runtimeSchema = RuntimeSchema.createFrom(clazz);
+            T t = runtimeSchema.newMessage();
+            ProtobufIOUtil.mergeFrom(bytes, t, runtimeSchema);
+            return t;
+        }catch (Exception e){
+            log.printf("ProtoStuff反序列化发送失败：%s",e.getMessage());
+        }
+        return null;
     }
 }

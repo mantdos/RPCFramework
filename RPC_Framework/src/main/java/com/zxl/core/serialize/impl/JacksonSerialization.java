@@ -1,7 +1,8 @@
 package com.zxl.core.serialize.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.zxl.core.serialize.SerializeUtil;
+import com.zxl.commons.util.KryoUtil;
+import com.zxl.core.serialize.Serialization;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -10,7 +11,7 @@ import java.io.IOException;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
-public class JacksonSerialization implements SerializeUtil {
+public class JacksonSerialization implements Serialization {
 
     //Holder模式的单例创建方式
     private static class SingletonHolder{
@@ -72,6 +73,27 @@ public class JacksonSerialization implements SerializeUtil {
             log.printf("反序列化发送失败：%s",e.getMessage());
             return null;
         }
+    }
+
+    @Override
+    public <T> byte[] serialize(T obj, Class<T> clazz) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(obj);
+        } catch (Exception e) {
+            log.printf("Jackson序列化失败：%s",e.getMessage());
+        }
+        return null;
+    }
+    @Override
+    public <T> Object unSerialize(byte[] bytes, Class<T> clazz) {
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            return mapper.readValue(bytes,clazz);
+        }catch (Exception e){
+            log.printf("Jackson反序列化发送失败：%s",e.getMessage());
+        }
+        return null;
     }
 
 }

@@ -5,7 +5,7 @@ import com.zxl.commons.entity.RpcResponse;
 import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.core.register.ServiceDiscovery;
 import com.zxl.core.register.zk.ZookeeperDiscovery;
-import com.zxl.core.serialize.SerializeUtil;
+import com.zxl.core.serialize.Serialization;
 import com.zxl.core.serialize.impl.ProtoStuffSerialization;
 import com.zxl.core.transport.RpcRequestTransport;
 
@@ -19,7 +19,7 @@ public class SocketRpcClient implements RpcRequestTransport {
     final ServiceDiscovery serviceDiscovery = new ZookeeperDiscovery();
 
     //组合一个序列化工具类
-    final SerializeUtil serializeUtil = ProtoStuffSerialization.newSingletonInstance();
+    final Serialization serializeUtil = ProtoStuffSerialization.newSingletonInstance();
 
     //传输Rpc请求数据
     public RpcResponse sendRpcRequest(RpcRequest rpcRequest) {

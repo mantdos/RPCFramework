@@ -3,9 +3,7 @@ package com.zxl.core.server.handler;
 import com.zxl.commons.entity.RpcRequest;
 import com.zxl.commons.entity.RpcResponse;
 import com.zxl.commons.entity.RpcServiceProperties;
-import com.zxl.core.serialize.SerializeUtil;
-import com.zxl.core.serialize.impl.JacksonSerialization;
-import com.zxl.core.serialize.impl.JdkSerialization;
+import com.zxl.core.serialize.Serialization;
 import com.zxl.core.serialize.impl.ProtoStuffSerialization;
 import com.zxl.core.server.impl.ServiceProviderImpl;
 
@@ -25,7 +23,7 @@ public class SocketRpcRequestHandlerRunnable implements Runnable{
     private Socket client;
 
     //组合一个序列化工具类
-    final SerializeUtil serializeUtil = ProtoStuffSerialization.newSingletonInstance();
+    final Serialization serializeUtil = ProtoStuffSerialization.newSingletonInstance();
 
     private  SocketRpcRequestHandlerRunnable(){}
 

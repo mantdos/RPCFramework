@@ -1,8 +1,11 @@
 package com.zxl.core.server.handler;
 
+import com.zxl.commons.entity.RpcMessage;
 import com.zxl.commons.entity.RpcRequest;
 import com.zxl.commons.entity.RpcResponse;
 import com.zxl.commons.entity.RpcServiceProperties;
+import com.zxl.commons.enums.RpcCodecEnum;
+import com.zxl.commons.enums.RpcRequestTypeEnum;
 import com.zxl.core.server.impl.ServiceProviderImpl;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,6 +17,9 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 
 public class NettyRpcServerHandler extends ChannelInboundHandlerAdapter {
+
+    //在netty中只需要通过枚举指定序列化方式就好了
+    private final RpcCodecEnum serializeEnum = RpcCodecEnum.KRYO;
 
     @Override  //读取客户端发来的数据并通过反射调用实现类的方法
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
@@ -31,9 +37,13 @@ public class NettyRpcServerHandler extends ChannelInboundHandlerAdapter {
             Method method = service.getClass().getMethod(request.getMethodName(), request.getParameterType());
             //4、反射调用方法
             Object response = method.invoke(service, request.getParameters());
-            //5、封装为响应体返回
+            //5、封装为响应体为RpcMessage返回
             rpcResponse = RpcResponse.success(response,request.getRequestID());
-            ctx.writeAndFlush(rpcResponse).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);//如果不成功则关闭通道
+            RpcMessage rpcMessage = RpcMessage.builder()
+                    .body(rpcResponse)
+                    .requsetType(RpcRequestTypeEnum.RPC_RESPONSE_TYPE.getTpye())
+                    .codec(serializeEnum.getCodec()).build();
+            ctx.writeAndFlush(rpcMessage).addListener(ChannelFutureListener.CLOSE_ON_FAILURE);//如果不成功则关闭通道
             return;
         }catch (Exception e) {
             e.printStackTrace();

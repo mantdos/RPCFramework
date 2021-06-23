@@ -1,16 +1,19 @@
 package com.zxl.core.transport.impl;
 
+import com.zxl.commons.entity.RpcMessage;
 import com.zxl.commons.entity.RpcRequest;
 import com.zxl.commons.entity.RpcResponse;
 import com.zxl.commons.entity.RpcServiceProperties;
+import com.zxl.commons.enums.RpcCodecEnum;
+import com.zxl.commons.enums.RpcRequestTypeEnum;
 import com.zxl.core.register.ServiceDiscovery;
 import com.zxl.core.register.zk.ZookeeperDiscovery;
-import com.zxl.core.serialize.SerializeUtil;
-import com.zxl.core.serialize.impl.ProtoStuffSerialization;
+import com.zxl.core.serialize.RpcMessageDecoder;
+import com.zxl.core.serialize.RpcMessageEncoder;
 import com.zxl.core.transport.NettyClientHandler;
 import com.zxl.core.transport.RpcRequestTransport;
-import com.zxl.core.transport.netty.ChannelProvider;
-import com.zxl.core.transport.netty.UnprocessedRequests;
+import com.zxl.core.transport.nettyUtil.ChannelProvider;
+import com.zxl.core.transport.nettyUtil.UnprocessedRequests;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -21,7 +24,6 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 
 import java.net.InetSocketAddress;
-import java.net.ResponseCache;
 import java.util.concurrent.CompletableFuture;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
@@ -31,8 +33,8 @@ public class NettyRpcClient implements RpcRequestTransport {
     //利用zookeeper来实现服务发现
     private final ServiceDiscovery serviceDiscovery = new ZookeeperDiscovery();
 
-    //组合一个序列化工具类
-    private final SerializeUtil serializeUtil = ProtoStuffSerialization.newSingletonInstance();
+    //在netty中只需要通过枚举指定序列化方式就好了
+    private final RpcCodecEnum serializeEnum = RpcCodecEnum.KRYO;
 
     //用于消费方异步的获取返回数据
     private final UnprocessedRequests unprocessedRequests = UnprocessedRequests.getNewInstance();
@@ -56,9 +58,9 @@ public class NettyRpcClient implements RpcRequestTransport {
                         public void initChannel(SocketChannel ch) throws Exception {
                             ChannelPipeline pipeline = ch.pipeline();
                             //编码器
-                            pipeline.addLast("encoder", new ObjectEncoder());
+                            pipeline.addLast("encoder", new RpcMessageEncoder());
                             //解码器  构造方法第一个参数设置二进制数据的最大字节数  第二个参数设置具体使用哪个类解析器
-                            pipeline.addLast("decoder", new ObjectDecoder(Integer.MAX_VALUE, ClassResolvers.cacheDisabled(null)));
+                            pipeline.addLast("decoder", new RpcMessageDecoder());
                             //客户端业务处理类
                             pipeline.addLast("handler", new NettyClientHandler());
                         }
@@ -85,10 +87,16 @@ public class NettyRpcClient implements RpcRequestTransport {
                 ChannelFuture future = b.connect(inetSocketAddress).sync();
                 channel = future.channel();
             }
-            //3、获得通道后包装数据并发送数据给服务器
-            channel.writeAndFlush(rpcRequest).addListener((ChannelFutureListener) future -> {
+            //3、获得服务器地址后包装成RpcMessage数据并发送数据给服务器
+            RpcMessage rpcMessage = RpcMessage.builder()
+                    .body(rpcRequest)
+                    .requsetType(RpcRequestTypeEnum.RPC_REQUEST_TYPE.getTpye())
+                    .codec(serializeEnum.getCodec()).build();
+            channel.writeAndFlush(rpcMessage).addListener((ChannelFutureListener) future -> {
                 if (future.isSuccess()) {
                     log.print("消费方端发送RpcRequest成功\r\n");
+                    //将completableFuture添加到异步进程获取的map中，然后netty会在handler中根据requestId异步注入数据
+                    unprocessedRequests.put(rpcRequest.getRequestID(),completableFuture);
                 } else {
                     future.channel().close();
                     //关闭异步future资源

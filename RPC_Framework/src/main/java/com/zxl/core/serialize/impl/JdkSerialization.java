@@ -1,14 +1,15 @@
 package com.zxl.core.serialize.impl;
 
-import com.zxl.commons.entity.RpcRequest;
-import com.zxl.core.serialize.SerializeUtil;
+import com.zxl.core.serialize.Serialization;
+import io.protostuff.LinkedBuffer;
+import io.protostuff.ProtobufIOUtil;
+import io.protostuff.runtime.RuntimeSchema;
 
 import java.io.*;
-import java.net.Socket;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
-public class JdkSerialization implements SerializeUtil {
+public class JdkSerialization implements Serialization {
 
     //Holder模式的单例创建方式
     private static class SingletonHolder{
@@ -62,5 +63,16 @@ public class JdkSerialization implements SerializeUtil {
     @Override
     public <T> Object recieveAndSerialize(BufferedInputStream bis, Class<T> clazz) {
         return this.recieveAndSerialize(bis);
+    }
+
+    @Override
+    public <T> byte[] serialize(T obj, Class<T> clazz) {
+        log.printf("JDK序列化失败,netty下不支持JDK序列化方式");
+        return null;
+    }
+    @Override
+    public <T> Object unSerialize(byte[] bytes, Class<T> clazz) {
+        log.printf("JDK反序列化失败,netty下不支持JDK反序列化方式");
+        return null;
     }
 }

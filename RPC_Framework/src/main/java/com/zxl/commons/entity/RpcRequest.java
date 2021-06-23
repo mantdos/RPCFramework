@@ -12,7 +12,10 @@ import java.lang.reflect.Method;
 //使用后添加一个全参构造器
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class RpcRequest implements Serializable {
-    private String requestID;//用于确保同一次传输的正确性，发送方和返回方应该是同一个ID
+    //requestId有两个作用，
+    // 1、用于确保同一次传输的正确性，发送方和返回方应该是同一个ID
+    // 2、在使用netty版本传输时帮助接收到的RpcResponse触发正确的CompleteFuture
+    private String requestID;
     private String interfaceName;//调用接口的全限定名，通过接口类的全限定名就可以锁定服务器ip了
     private String methodName;//方法名称
     private Class<?>[] parameterType;//输入参数类型

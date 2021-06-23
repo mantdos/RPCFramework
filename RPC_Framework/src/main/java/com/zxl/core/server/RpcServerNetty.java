@@ -4,6 +4,8 @@ import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.commons.enums.ServerConfigEnum;
 import com.zxl.commons.util.PropertiesFileUtil;
 import com.zxl.core.register.zk.util.CuratorUtils;
+import com.zxl.core.serialize.RpcMessageDecoder;
+import com.zxl.core.serialize.RpcMessageEncoder;
 import com.zxl.core.server.handler.NettyRpcServerHandler;
 import com.zxl.core.server.handler.SocketRpcRequestHandlerRunnable;
 import com.zxl.core.server.impl.ServiceProviderImpl;
@@ -94,9 +96,9 @@ public class RpcServerNetty {
                 protected void initChannel(SocketChannel ch) throws Exception {
                     ChannelPipeline pipeline = ch.pipeline();
                     //编码器
-                    pipeline.addLast("encoder", new ObjectEncoder());
+                    pipeline.addLast("encoder", new RpcMessageEncoder());
                     //解码器
-                    pipeline.addLast("decoder", new ObjectDecoder(Integer.MAX_VALUE, ClassResolvers.cacheDisabled(null)));
+                    pipeline.addLast("decoder", new RpcMessageDecoder());
                     //服务器端业务处理类
                     pipeline.addLast(serviceHandlerGroup, new NettyRpcServerHandler());
                 }

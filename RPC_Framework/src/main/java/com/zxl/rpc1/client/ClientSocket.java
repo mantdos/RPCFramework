@@ -4,7 +4,7 @@ import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.core.proxy.RpcClientProxy;
 import com.zxl.rpc1.interfacee.Student;
 
-public class Client {
+public class ClientSocket {
     public static void main(String[] args) {
         //定义Rpc的版本信息等等
         RpcServiceProperties rpcServiceProperties = RpcServiceProperties.builder().group("Test1").version("V1.0").build();

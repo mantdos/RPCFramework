@@ -17,7 +17,7 @@ import java.util.UUID;
 public class RpcClientProxy implements InvocationHandler {
     //用来告诉代理类当前使用的是什么分组和什么版本
     final RpcServiceProperties rpcServiceProperties;
-    final RpcRequestTransport rpcRequestTransport = new NettyRpcClient();
+    final RpcRequestTransport rpcRequestTransport = new SocketRpcClient();
 
     public RpcClientProxy(RpcServiceProperties rpcServiceProperties) {
         this.rpcServiceProperties = rpcServiceProperties;

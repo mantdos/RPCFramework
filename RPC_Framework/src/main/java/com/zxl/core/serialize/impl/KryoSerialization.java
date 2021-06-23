@@ -1,13 +1,13 @@
 package com.zxl.core.serialize.impl;
 
 import com.zxl.commons.util.KryoUtil;
-import com.zxl.core.serialize.SerializeUtil;
+import com.zxl.core.serialize.Serialization;
 
 import java.io.*;
 
 import static jdk.nashorn.internal.runtime.regexp.joni.Config.log;
 
-public class KryoSerialization implements SerializeUtil {
+public class KryoSerialization implements Serialization {
 
     //Holder模式的单例创建方式
     private static class SingletonHolder{
@@ -42,6 +42,8 @@ public class KryoSerialization implements SerializeUtil {
         this.serializeAndSend(bos,obj);
     }
 
+
+
     /**
      * 和jdk方式一样，在反序列化的时候什么都不需要，只需要二进制文件即可
      */
@@ -67,4 +69,25 @@ public class KryoSerialization implements SerializeUtil {
     public <T> Object recieveAndSerialize(BufferedInputStream bis, Class<T> clazz) {
         return recieveAndSerialize(bis);
     }
+
+    @Override
+    public <T> byte[] serialize(T obj, Class<T> clazz) {
+        try {
+            //采用這種方式會同時保存對象的類型信息，這樣在讀取時是不需要填寫類型信息的
+            return KryoUtil.writeToByteArray(obj);
+        } catch (Exception e) {
+            log.printf("Kryo序列化失败：%s",e.getMessage());
+        }
+        return null;
+    }
+    @Override
+    public <T> Object unSerialize(byte[] bytes, Class<T> clazz) {
+        try {
+            return KryoUtil.readFromByteArray(bytes);
+        }catch (Exception e){
+            log.printf("Kryo反序列化发送失败：%s",e.getMessage());
+        }
+        return null;
+    }
+
 }

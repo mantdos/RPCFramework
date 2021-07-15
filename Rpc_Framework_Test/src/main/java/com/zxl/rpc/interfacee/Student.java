@@ -1,4 +1,4 @@
-package com.zxl.rpc1.interfacee;
+package com.zxl.rpc.interfacee;
 
 public interface Student {
     public void eat();

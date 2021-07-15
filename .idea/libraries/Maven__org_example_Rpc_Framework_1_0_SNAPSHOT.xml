@@ -1,7 +1,7 @@
 <component name="libraryTable">
   <library name="Maven: org.example:Rpc_Framework:1.0-SNAPSHOT">
     <CLASSES>
-      <root url="jar://$MAVEN_REPOSITORY$/org/example/RPC_Framework/1.0-SNAPSHOT/RPC_Framework-1.0-SNAPSHOT.jar!/" />
+      <root url="jar://$MAVEN_REPOSITORY$/org/example/Rpc_Framework/1.0-SNAPSHOT/RPC_Framework-1.0-SNAPSHOT.jar!/" />
     </CLASSES>
     <JAVADOC>
       <root url="jar://$MAVEN_REPOSITORY$/org/example/Rpc_Framework/1.0-SNAPSHOT/Rpc_Framework-1.0-SNAPSHOT-javadoc.jar!/" />

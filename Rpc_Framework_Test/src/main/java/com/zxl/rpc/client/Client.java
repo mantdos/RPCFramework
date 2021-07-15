@@ -1,4 +1,4 @@
-package com.zxl.rpc1.client;
+package com.zxl.rpc.client;
 
 import com.zxl.commons.entity.RpcServiceProperties;
 import com.zxl.core.proxy.RpcClientProxy;
